@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="UTF-8">
+      <title>GarbageAPP</title>
+      <link href="//cdn.bootcss.com/noUiSlider/8.5.1/nouislider.min.css" rel="stylesheet">
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/css/materialize.min.css">
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <script src="/static/wNumb.js"></script>
+       <script src="/static/noUiSlider/nouislider.js"></script>
+       <link href="/static/noUiSlider/nouislider.css" rel="stylesheet">
+	    <script async defer
+	    	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAzv-L53wIUmXOf3Ov_URGGm40gGBQ7t9w&callback=initMap">
+	    </script>      
+   </head>
+<body>
+  <div id="load">
+    <div class="preloader-wrapper big active" id="label">
+    <div class="spinner-layer spinner-blue-only">
+      <div class="circle-clipper left">
+        <div class="circle"></div>
+      </div><div class="gap-patch">
+        <div class="circle"></div>
+      </div><div class="circle-clipper right">
+        <div class="circle"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+	<div id="container">	
+	<div class="card light-blue darken-4 scale-transition scale-out overlay" id="infocard">
+		<a class="btn-floating halfway-fab waves-effect waves-light red" id="closeinfocard"><i class="material-icons">close</i></a>
+		 <div class="card-content white-text">
+              <span class="card-title" id="wardname"></span>
+              <p id="zone"></p>
+              <p id="divison"></p>
+              <p id="subdivision"></p>
+              <p id="MLA"></p>
+              <p id="MP"></p>		          
+       	</div>  			
+	</div>
+		<div class="fixed-action-btn toolbar">
+		    <a class="btn-floating btn-large light-blue darken-4">
+		      <i class="large material-icons">mode_edit</i>
+		    </a>
+        <ul>          
+          <li>
+            <div id="date-slider"></div>
+          </li>
+        </ul>
+		 </div>
+		<div id="map"></div>
+		
+		
+	</div>
+</body>
+<style>
+html,body,#container{
+	width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+#map {
+    position: relative;
+}
+.overlay{
+	position: absolute;
+	top: 10%; 
+	right: 2%; 
+	z-index: 10;
+}
+.fixed-action-btn{
+	right:0px;
+	left:23px;
+}
+.btn-floating.halfway-fab{
+	top:-15px;
+	right:-15px
+}
+
+#date-slider{
+  top:70%;
+  margin-left:5%;
+  margin-right:5%;
+}
+
+.fixed-action-btn.toolbar{
+  height: 69px;
+}
+
+.noUi-connect {
+  background: #4fc3f7;
+}
+
+.noUi-horizontal .noUi-handle, .noUi-vertical .noUi-handle {
+  background: white ;
+}
+
+.noUi-target.noUi-horizontal .noUi-tooltip {
+  background-color: white ;
+}
+.noUi-tooltip span{
+  color: #01579b;
+}
+
+#load{
+    width:100%;
+    height:100%;
+    position:fixed;
+    z-index:9999;
+    background-color:#01579b; 
+}
+
+#label{
+  top:50%;
+  left:50%;
+}
+
+</style> 
+
+<script>
+  var date = new Date(); 
+  today = date.getTime();
+  yesterday = date.setDate(date.getDate() - 1)
+  lastweek = date.setDate(date.getDate() - 6)
+  var markerlist = []
+  var allmarkers = {}
+  var map 
+
+  document.onreadystatechange = function () {
+    var state = document.readyState
+    if (state == 'interactive') {
+         document.getElementById('container').style.visibility="hidden";
+    } else if (state == 'complete') {
+        setTimeout(function(){
+           document.getElementById('load').style.visibility="hidden";
+           document.getElementById('container').style.visibility="visible";
+        },1000);
+    }
+  }
+
+
+  function initMap() {  	  
+ 	  var hour = date.getHours();
+ 	  if (hour > 18 || hour < 6){
+ 	  	map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: 12.994962, lng: 77.596532},
+        zoom: 11,
+        fullscreenControl: false,
+        streetViewControlOptions: {
+              position: google.maps.ControlPosition.LEFT_TOP
+        },
+        zoomControlOptions: {
+              position: google.maps.ControlPosition.LEFT_TOP
+        },
+        styles: [
+          {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
+          {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
+          {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
+          {
+            featureType: 'administrative.locality',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#d59563'}]
+          },
+          {
+            featureType: 'poi',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#d59563'}]
+          },
+          {
+            featureType: 'poi.park',
+            elementType: 'geometry',
+            stylers: [{color: '#263c3f'}]
+          },
+          {
+            featureType: 'poi.park',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#6b9a76'}]
+          },
+          {
+            featureType: 'road',
+            elementType: 'geometry',
+            stylers: [{color: '#38414e'}]
+          },
+          {
+            featureType: 'road',
+            elementType: 'geometry.stroke',
+            stylers: [{color: '#212a37'}]
+          },
+          {
+            featureType: 'road',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#9ca5b3'}]
+          },
+          {
+            featureType: 'road.highway',
+            elementType: 'geometry',
+            stylers: [{color: '#746855'}]
+          },
+          {
+            featureType: 'road.highway',
+            elementType: 'geometry.stroke',
+            stylers: [{color: '#1f2835'}]
+          },
+          {
+            featureType: 'road.highway',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#f3d19c'}]
+          },
+          {
+            featureType: 'transit',
+            elementType: 'geometry',
+            stylers: [{color: '#2f3948'}]
+          },
+          {
+            featureType: 'transit.station',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#d59563'}]
+          },
+          {
+            featureType: 'water',
+            elementType: 'geometry',
+            stylers: [{color: '#17263c'}]
+          },
+          {
+            featureType: 'water',
+            elementType: 'labels.text.fill',
+            stylers: [{color: '#515c6d'}]
+          },
+          {
+            featureType: 'water',
+            elementType: 'labels.text.stroke',
+            stylers: [{color: '#17263c'}]
+          }
+        ]
+      });
+ 	  }	else{
+   	  map = new google.maps.Map(document.getElementById('map'), {
+  	    zoom: 11,
+  	    center: {lat: 12.994962, lng: 77.596532},
+        fullscreenControl: false,
+        streetViewControlOptions: {
+              position: google.maps.ControlPosition.LEFT_TOP
+        },
+        zoomControlOptions: {
+              position: google.maps.ControlPosition.LEFT_TOP
+        }
+  	  });
+ 	  } 
+	  
+
+	  map.data.loadGeoJson('static/bbpmloc.json');
+
+	  map.data.setStyle(function(feature) {
+	    var zone = feature.getProperty('Zone');
+	    var color = "";
+	    switch(zone) {
+		    case "Yelahanka":
+		        color = "#7e57c2 " /*deep purple-lighten*/
+		        break;
+		    case "Dasarahalli ":
+		        color = "#f06292 " /*pink-lighten*/
+		        break;
+		    case "Rajarajeswari Nagar":
+		        color = "#d4e157" /*lime-lighten*/
+		        break;
+		    case "South":
+		        color = "#26c6da" /*cyan-lighten*/
+		        break;
+		    case "East":
+		        color = "#ef5350" /*red-lighten*/
+		        break;
+		    case "Mahadevapura":
+		        color = "#ffa726" /*orange-lighten*/
+		        break;
+		    case "West":
+		        color = "#ab47bc" /*purple-lighten*/
+		        break; 
+		    case "Bommanahalli":
+		        color = "#9ccc65" /*teal-lighten*/
+		        break;                       
+		    default:
+		        color = "grey"
+		}
+	    return {
+	      fillColor: color,
+	      strokeColor: color,
+	      strokeWeight: 1
+	    }
+	  });
+
+    
+    $.ajax({
+      type: 'GET',
+      url: "/data",
+      async:false,
+      success: function(data){
+        markerlist = data
+      },
+      error: function(){
+        markerlist = "error"
+      }            
+    }).done(function() {
+        if (markerlist != "error"){
+          for (var i = 0; i < markerlist.length; i++) {
+            if (markerlist[i].unixtimestamp > yesterday){
+              var latlng = new google.maps.LatLng(markerlist[i].latitude, markerlist[i].longitude);
+              var marker = new google.maps.Marker({
+                position: latlng,
+                title: 'new marker',
+                draggable: false,
+                map: map
+              });
+              allmarkers[markerlist[i].filename_unique] = marker
+            }                       
+          }
+        }else{
+          Materialize.toast('Backend error, reloading the page', 2000)
+          setTimeout(function(){
+            location.reload()
+          },2000)          
+        }       
+    })
+
+  	map.data.addListener('mouseover', function(event) {
+  		map.data.overrideStyle(event.feature, {strokeColor: 'white'});
+  		map.data.overrideStyle(event.feature, {fillColor: 'white'});
+     		map.data.overrideStyle(event.feature, {strokeWeight: 4});
+  	});
+
+  	map.data.addListener('mouseout', function(event) {
+     		map.data.revertStyle();
+  	});
+
+  	map.data.addListener('click', function(event) {
+  		var test = document.getElementById("infocard").classList.contains('scale-out')
+  		if(!test){
+  			document.getElementById("infocard").classList.add('scale-out');
+  		}
+     		var name = event.feature.getProperty('name');
+     		var wardname = event.feature.getProperty('Ward Name');
+     		var zone = event.feature.getProperty('Zone');
+     		var division = event.feature.getProperty('Division');
+     		var subdivision = event.feature.getProperty('Subdivision');
+     		var MLA = event.feature.getProperty('Assembly (MLA) Constituency ');
+     		var MP = event.feature.getProperty('Parliament (MP) Constituency');
+     		document.getElementById("wardname").innerHTML=name;
+     		document.getElementById("zone").innerHTML="Name: "+wardname;
+     		document.getElementById("divison").innerHTML="Division: "+division;
+     		document.getElementById("subdivision").innerHTML="Subdivision: "+subdivision;
+     		document.getElementById("MLA").innerHTML="Assembly (MLA) Constituency: "+MLA;
+     		document.getElementById("MP").innerHTML="Parliament (MP) Constituency: "+MP;
+     		setTimeout(function(){
+      		document.getElementById("infocard").classList.remove('scale-out');
+  		}, 500);
+    });
+  }
+
+  max = today
+  min = yesterday
+  var slider = document.getElementById('date-slider');
+  noUiSlider.create(slider, {
+    start: [ yesterday, today ],
+     connect: true,
+     step:24 * 60 * 60 * 1000,
+     orientation: 'horizontal', // 'horizontal' or 'vertical'
+     range: {
+       'min': lastweek,
+       'max': today
+     },
+     format: wNumb({
+       decimals: 0
+     })
+  });
+
+  weekdays = [
+    "Sun", "Mon", "Tue","Wed", "Thur", "Fri","Sat"]
+
+  slider.noUiSlider.on('update', function( values, handle ) {
+    var handleclass = ""
+    if(handle == 1){
+      handleclass = ".noUi-handle-upper span"
+      max = values[handle]
+    }else{
+      handleclass = ".noUi-handle-lower span"
+      min = values[handle]
+    } 
+    $(handleclass).html(formatDate(new Date(+values[handle])));
+    for (var i = 0; i < markerlist.length; i++) {
+      if (markerlist[i].unixtimestamp > min && markerlist[i].unixtimestamp < max){
+        if (markerlist[i].filename_unique in allmarkers){
+          allmarkers[markerlist[i].filename_unique].setMap(map)
+        }else{
+          var latlng = new google.maps.LatLng(markerlist[i].latitude, markerlist[i].longitude);
+          var marker = new google.maps.Marker({
+            position: latlng,
+            title: 'new marker',
+            draggable: false,
+            map: map
+          });
+          allmarkers[markerlist[i].filename_unique] = marker
+        }       
+      }else{
+        allmarkers[markerlist[i].filename_unique].setMap(null)
+      }
+    }
+  });
+
+  function formatDate (date) {
+    return weekdays[date.getDay()]
+  }
+
+  $( "#closeinfocard" ).click(function() {
+    document.getElementById("infocard").classList.add('scale-out');
+ 	});
+
+
+</script>
+    
+</html>
+
+
